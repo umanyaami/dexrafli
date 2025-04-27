@@ -1,35 +1,29 @@
-async function fetchNewTokens() {
-    const url = "https://api.dexscreener.com/latest/dex/pairs";
+async function fetchTokenData() {
+  try {
+    const response = await fetch('https://api.dexscreener.com/latest/dex/tokens');
+    const data = await response.json();
 
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
+    const tokenList = document.getElementById('tokenList');
+    tokenList.innerHTML = '';
 
-        const list = document.getElementById('tokenList');
-        list.innerHTML = '';
+    // Ambil 10 token teratas saja biar ringan
+    const tokens = data.pairs.slice(0, 10);
 
-        if (data && data.pairs && data.pairs.length > 0) {
-            data.pairs.slice(0, 10).forEach(token => {
-                const div = document.createElement('div');
-                div.className = 'token-item';
-                div.innerHTML = `
-                    <strong>${token.baseToken.name}</strong> (${token.baseToken.symbol})<br>
-                    Pair: ${token.baseToken.address} / ${token.quoteToken.symbol}<br>
-                    DEX: ${token.dexId}
-                `;
-                list.appendChild(div);
-            });
-        } else {
-            list.innerHTML = "Tidak ada token baru ditemukan.";
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        document.getElementById('tokenList').innerHTML = "Gagal mengambil data.";
-    }
+    tokens.forEach(token => {
+      const card = document.createElement('div');
+      card.className = 'token-card';
+      card.innerHTML = `
+        <h2>${token.baseToken.name} (${token.baseToken.symbol})</h2>
+        <p>Price: $${parseFloat(token.priceUsd).toFixed(4)}</p>
+        <p>DEX: ${token.dexId}</p>
+      `;
+      tokenList.appendChild(card);
+    });
+  } catch (error) {
+    console.error('Error fetching token data:', error);
+    document.getElementById('tokenList').innerText = 'Gagal mengambil data';
+  }
 }
 
-// Load pertama
-fetchNewTokens();
-
-// Update tiap 30 detik
-setInterval(fetchNewTokens, 30000);
+// Jalankan saat halaman selesai dimuat
+document.addEventListener('DOMContentLoaded', fetchTokenData);
